@@ -1,0 +1,36 @@
+- name: Update ip address in Route53
+  hosts:
+    - localhost
+  vars:
+    target_zone: "{{ lookup('env','TARGET_ZONE') }}"
+    target_record: "{{ lookup('env','TARGET_RECORD') }}"
+  tasks:
+    - name: Get current ip address
+      uri:
+        url: "https://api.ipify.org/?format=json"
+      register: ip_lookup
+    - name: Get AWS DNS entry
+      route53:
+        state: get
+        zone: "{{ target_zone }}"
+        record: "{{ target_record }}"
+        type: A
+      register: rec
+    - debug:
+        msg: "IP addresses match [{{ip_lookup.json.ip}}]; Record does not need updating"
+      when: ip_lookup.json.ip == rec.set.value
+    - block:
+        - name: Update Route53
+          route53:
+            state: present
+            zone: "{{ target_zone }}"
+            record: "{{ target_record }}"
+            type: A
+            ttl: 7200
+            overwrite: true
+            value:
+              - "{{ ip_lookup.json.ip }}"
+            wait: true
+        - debug:
+            msg: "IP address for {{ target_record }} has been updated to [{{ip_lookup.json.ip}}]"
+      when: ip_lookup.json.ip != rec.set.value
