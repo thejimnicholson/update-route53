@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: updateroute53
+data:
+  TARGET_ZONE: thejimnicholson.com
+  TARGET_RECORD: thejimnicholson.com

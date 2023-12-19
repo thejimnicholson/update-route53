@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: updateroute53
+spec:
+  schedule: "@hourly"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: updateroute53
+            image: ghcr.io/thejimnicholson/update-route53:nightly
+            imagePullPolicy: Always
+            envFrom:
+              - configMapRef:
+                  name: updateroute53
+              - secretRef:
+                  name: awscreds
+          restartPolicy: OnFailure
